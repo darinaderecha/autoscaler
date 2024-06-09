@@ -13,20 +13,16 @@ func NewServer() *Server {
 	router := gin.Default()
 
 	router.GET("/dollar", server.getDollar)
+	router.GET("/health", server.checkHealth)
 	server.router = router
 	return server
 }
 
 func (server *Server) Start(address string) error {
+	go server.periodicHealthCheck()
 	return server.router.Run(address)
 }
 
 func errorResponse(err error) gin.H {
 	return gin.H{"error": err.Error()}
 }
-
-//design api endpoints
-//data
-//handler to return all items
-//handler to add a new item
-//write a handlere to return a speecific item

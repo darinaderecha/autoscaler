@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -10,13 +9,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var DollarNow float64
-
-type createDollarRequest struct {
-}
-
 type DollarResponse struct {
 	Rate string `json:"rate"`
+}
+
+func (s *Server) getDollar(ctx *gin.Context) {
+
+	var err error
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	dollar, err := fetchDollarRate()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, DollarResponse{Rate: dollar})
 }
 
 func fetchDollarRate() (string, error) {
@@ -45,26 +56,5 @@ func fetchDollarRate() (string, error) {
 	if rate == "" {
 		return "", errors.New("failed to find dollar rate in the page")
 	}
-	fmt.Println()
-	fmt.Println()
-	fmt.Println(rate)
-	fmt.Println()
 	return strings.TrimSpace(rate), nil
-}
-
-func (s *Server) getDollar(ctx *gin.Context) {
-	var req createDollarRequest
-	var err error
-	if err = ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	dollar, err := fetchDollarRate()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, DollarResponse{Rate: dollar})
 }
